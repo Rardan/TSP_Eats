@@ -13,13 +13,14 @@ enum Tsp { przeglad, wyzarzanie, zachlanny };
 
 void testy();
 std::vector<std::vector<double>> generuj_macierz_do_testow(int);
-void dostarcz_zamowienia(std::vector<std::vector<double>>, bool, Tsp);
+double dostarcz_zamowienia(std::vector<std::vector<double>>, bool, Tsp);
 int wyznacz_restauracje(std::vector<std::vector<double>> macierz_odleglosci);
 std::vector<std::vector<double>> wczytaj_macierz_odleglosci(std::string sciezka_dostepu);
 double oblicz_odleglosc(wspolrzedne pkt1, wspolrzedne pkt2);
 std::vector<int> znajdz_zamowienia_w_okolicy(std::vector<std::vector<double>>, std::vector<bool>, int, int);
 double daj_wage(int, int, std::vector<std::vector<double>>);
 std::vector<std::vector<double>> generuj_macierz_wybranych_zamowien(std::vector<std::vector<double>>, std::vector<int>);
+int daj_numer_pozycji_restauracji_w_czesciawej_macierzy_zamowien(std::vector<int>);
 
 bool sort_by_sec(const std::pair<int, double>& a, const std::pair<int, double>& b);
 
@@ -70,11 +71,13 @@ int main()
 	return 0;
 }
 
-void dostarcz_zamowienia(std::vector<std::vector<double>> macierz_odleglosci_global, bool test, Tsp algorytm)
+double dostarcz_zamowienia(std::vector<std::vector<double>> macierz_odleglosci_global, bool test, Tsp algorytm)
 {
 	std::vector<std::vector<double>> macierz_odleglosci = macierz_odleglosci_global;
 
 	std::vector<bool> zamowienia;
+
+	double droga_max = 0.0;
 
 	for (int i = 0; i < macierz_odleglosci.size(); i++)
 	{
@@ -103,7 +106,7 @@ void dostarcz_zamowienia(std::vector<std::vector<double>> macierz_odleglosci_glo
 	zamowienia.at(restauracja) = true;
 	zamowienia.at(restauracja2) = true;
 
-	if (macierz_odleglosci.size() < 2) return;
+	if (macierz_odleglosci.size() < 2) return 0;
 
 	std::string tmp;
 	double temperatura_poczatkowa = 100000.0;
@@ -163,7 +166,7 @@ void dostarcz_zamowienia(std::vector<std::vector<double>> macierz_odleglosci_glo
 			c_przeglad_zupelny przeglad_zupelny = c_przeglad_zupelny(wybrane_zamowienia, false);
 			liczba_iteracji = (int)pow((double)wybrane_zamowienia.size(), (double)2) / 4;
 			c_symulowane_wyzarzanie symulowane_wyzarzanie = c_symulowane_wyzarzanie(wybrane_zamowienia, temperatura_poczatkowa, temperatura_chlodzenia, temperatura_minimalna, liczba_iteracji, false);
-			c_algorytm_zachlanny algorytm_zachlanny = c_algorytm_zachlanny(wybrane_zamowienia, false);
+			c_algorytm_zachlanny algorytm_zachlanny = c_algorytm_zachlanny(macierz_odleglosci, false);
 			std::vector<int> najlepsza_trasa;
 			double dlugosc_najlepszej_trasy = 0.0;
 			switch (algorytm)
@@ -183,7 +186,7 @@ void dostarcz_zamowienia(std::vector<std::vector<double>> macierz_odleglosci_glo
 				break;
 
 			case Tsp::zachlanny:
-				algorytm_zachlanny.znajdz_rozwiazanie(0, vec);
+				algorytm_zachlanny.znajdz_rozwiazanie(vec.at(0), vec);
 				najlepsza_trasa = algorytm_zachlanny.najlepsza_trasa;
 				dlugosc_najlepszej_trasy = algorytm_zachlanny.dlugosc_najlepszej_trasy;
 				break;
@@ -191,18 +194,32 @@ void dostarcz_zamowienia(std::vector<std::vector<double>> macierz_odleglosci_glo
 				std::cout << "blad";
 			}
 
-
+			droga_max += dlugosc_najlepszej_trasy;
 
 			if (!test)
 			{
-				std::cout << "Najlepsza trasa: ";
-				std::cout << vec.at(0) << "-> ";
-				for (int i = 0; i < najlepsza_trasa.size(); i++)
-					std::cout << vec.at(najlepsza_trasa[i]) << "-> ";
-				std::cout << vec.at(0);
-				std::cout << std::endl;
-				std::cout << "Jej dlugosc: " << dlugosc_najlepszej_trasy << std::endl;
-				std::cout << std::endl;
+				if (algorytm == Tsp::zachlanny)
+				{
+					std::cout << "Najlepsza trasa: ";
+					
+					for (int i = 0; i < najlepsza_trasa.size(); i++)
+						std::cout << najlepsza_trasa.at(i) << "-> ";
+					std::cout << najlepsza_trasa.at(0);
+					std::cout << std::endl;
+					std::cout << "Jej dlugosc: " << dlugosc_najlepszej_trasy << std::endl;
+					std::cout << std::endl;
+				}
+				else
+				{
+					std::cout << "Najlepsza trasa: ";
+					std::cout << vec.at(0) << "-> ";
+					for (int i = 0; i < najlepsza_trasa.size(); i++)
+						std::cout << vec.at(najlepsza_trasa[i]) << "-> ";
+					std::cout << vec.at(0);
+					std::cout << std::endl;
+					std::cout << "Jej dlugosc: " << dlugosc_najlepszej_trasy << std::endl;
+					std::cout << std::endl;
+				}
 			}
 		}
 		else
@@ -219,6 +236,8 @@ void dostarcz_zamowienia(std::vector<std::vector<double>> macierz_odleglosci_glo
 			for (int i = 0; i < vec.size() - 1; i++)
 				droga += daj_wage(vec.at(i), vec.at(i + 1), macierz_odleglosci);
 			droga += daj_wage(vec.at(0), vec.at(vec.size() - 1), macierz_odleglosci);
+
+			droga_max += droga;
 
 			if (!test)
 			{
@@ -237,6 +256,7 @@ void dostarcz_zamowienia(std::vector<std::vector<double>> macierz_odleglosci_glo
 		if (dostarczone_tmp)
 			break;
 	}
+	return droga_max;
 }
 
 void testy()
@@ -245,7 +265,7 @@ void testy()
 	plik_przeg.open("wyniki_przeglad.txt");
 	plik_wyz.open("wyniki_wyzarzanie.txt");
 	plik_zach.open("wyniki_zachlanny.txt");
-	std::vector<int> rozmiar = { 10, 20, 30, 50, 100, 150 };
+	std::vector<int> rozmiar = { 10, 20, 30, 50, 100, 150, 250, 500 };
 	double powtorzenia = 20.0;
 
 
@@ -254,24 +274,25 @@ void testy()
 	{
 		std::cout << rozmiar.at(i) << std::endl;
 		double czas_przeg = 0.0, czas_wyz = 0.0, czas_zach = 0.0;
+		double droga_przeg = 0.0, droga_wyz = 0.0, droga_zach = 0.0;
 		std::vector< std::vector<double>> matrix = generuj_macierz_do_testow(rozmiar.at(i));
 		for (int j = 0; j < (int)powtorzenia; j++)
 		{
 			StartCounter();
-			dostarcz_zamowienia(matrix, true, Tsp::przeglad);
+			droga_przeg += dostarcz_zamowienia(matrix, true, Tsp::przeglad);
 			czas_przeg += GetCounter();
 
 			StartCounter();
-			dostarcz_zamowienia(matrix, true, Tsp::wyzarzanie);
+			droga_wyz += dostarcz_zamowienia(matrix, true, Tsp::wyzarzanie);
 			czas_wyz += GetCounter();
 
 			StartCounter();
-			dostarcz_zamowienia(matrix, true, Tsp::zachlanny);
+			droga_zach += dostarcz_zamowienia(matrix, true, Tsp::zachlanny);
 			czas_zach += GetCounter();
 		}
-		plik_przeg << rozmiar.at(i) << " " << czas_przeg / powtorzenia << "\n";
-		plik_wyz << rozmiar.at(i) << " " << czas_wyz / powtorzenia << "\n";
-		plik_zach << rozmiar.at(i) << " " << czas_zach / powtorzenia << "\n";
+		plik_przeg << rozmiar.at(i) << " " << czas_przeg / powtorzenia << " " << droga_przeg / powtorzenia << "\n";
+		plik_wyz << rozmiar.at(i) << " " << czas_wyz / powtorzenia << " " << droga_wyz / powtorzenia << "\n";
+		plik_zach << rozmiar.at(i) << " " << czas_zach / powtorzenia << " " << droga_zach / powtorzenia << "\n";
 	}
 
 	plik_przeg.close();
@@ -430,6 +451,19 @@ std::vector<int> znajdz_zamowienia_w_okolicy(std::vector<std::vector<double>> ma
 		zamowienia_last.push_back(zamowienia_return.at(i));
 
 	return zamowienia_last;
+}
+
+int daj_numer_pozycji_restauracji_w_czesciawej_macierzy_zamowien(std::vector<int> vec)
+{
+	int restauracja = vec.at(0);
+
+	std::sort(vec.begin(), vec.end());
+
+	for (int i = 0; i < vec.size(); i++)
+		if (vec.at(i) == restauracja)
+			return i;
+
+	return 0;
 }
 
 std::vector<std::vector<double>> generuj_macierz_wybranych_zamowien(std::vector<std::vector<double>> macierz_odleglosci, std::vector<int> zamowienia)

@@ -26,6 +26,9 @@ void c_algorytm_zachlanny::znajdz_rozwiazanie(int restauracja, std::vector<int> 
 		dlugosc_obecnej_trasy = dlugosc_obecnej_trasy + macierz_odleglosci[poprzednie_miasto][biezace_miasto];
 	}
 
+	dlugosc_najlepszej_trasy = dlugosc_obecnej_trasy;
+	najlepsza_trasa = obecna_trasa;
+
 	if (wyswietlanie)
 	{
 		std::cout << "Trasa kuriera:";
@@ -41,7 +44,7 @@ int c_algorytm_zachlanny::ustal_nastepne_miasto(int poprzednie_miasto, std::vect
 	int nastepne_miasto = 999;
 	int minimalna_odleglosc = 9999999;
 
-	for (unsigned int i = 1; i < macierz_odleglosci.size(); i++) {
+	for (unsigned int i = 0; i < macierz_odleglosci.size(); i++) {
 
 		if (!std::count(zamowienia.begin(), zamowienia.end(), i)) continue;
 
