@@ -10,7 +10,7 @@ c_algorytm_zachlanny::c_algorytm_zachlanny(std::vector<std::vector<double>> _mac
 void c_algorytm_zachlanny::znajdz_rozwiazanie(int restauracja, std::vector<int> zamowienia)
 {
 	int dlugosc_obecnej_trasy = 0;
-	
+
 
 	std::vector<int> obecna_trasa;
 	int biezace_miasto = restauracja;
@@ -26,7 +26,12 @@ void c_algorytm_zachlanny::znajdz_rozwiazanie(int restauracja, std::vector<int> 
 		dlugosc_obecnej_trasy = dlugosc_obecnej_trasy + macierz_odleglosci[poprzednie_miasto][biezace_miasto];
 	}
 
-	dlugosc_najlepszej_trasy = dlugosc_obecnej_trasy;
+	for (int i = 0; i < obecna_trasa.size() - 1; i++)
+	{
+		dlugosc_najlepszej_trasy += policz_droge(obecna_trasa.at(i), obecna_trasa.at(i + 1));
+	}
+	dlugosc_najlepszej_trasy += policz_droge(obecna_trasa.at(0), obecna_trasa.at(obecna_trasa.size() - 1));
+
 	najlepsza_trasa = obecna_trasa;
 
 	if (wyswietlanie)
@@ -56,9 +61,14 @@ int c_algorytm_zachlanny::ustal_nastepne_miasto(int poprzednie_miasto, std::vect
 
 		};
 
-		
+
 
 	}
-	
+
 	return nastepne_miasto;
+}
+
+double c_algorytm_zachlanny::policz_droge(int x, int y)
+{
+	return macierz_odleglosci.at(x).at(y);
 }

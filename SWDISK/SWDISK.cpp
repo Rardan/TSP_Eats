@@ -13,7 +13,7 @@ enum Tsp { przeglad, wyzarzanie, zachlanny };
 
 void testy();
 std::vector<std::vector<double>> generuj_macierz_do_testow(int);
-double dostarcz_zamowienia(std::vector<std::vector<double>>, bool, Tsp);
+double dostarcz_zamowienia(std::vector<std::vector<double>>, int, int, bool, Tsp);
 int wyznacz_restauracje(std::vector<std::vector<double>> macierz_odleglosci);
 std::vector<std::vector<double>> wczytaj_macierz_odleglosci(std::string sciezka_dostepu);
 double oblicz_odleglosc(wspolrzedne pkt1, wspolrzedne pkt2);
@@ -54,13 +54,13 @@ int main()
 	switch (nr_opcji)
 	{
 	case 1:
-		dostarcz_zamowienia(macierz_odleglosci_global, false, Tsp::przeglad);
+		dostarcz_zamowienia(macierz_odleglosci_global, -1, -1, false, Tsp::przeglad);
 		break;
 	case 2:
-		dostarcz_zamowienia(macierz_odleglosci_global, false, Tsp::wyzarzanie);
+		dostarcz_zamowienia(macierz_odleglosci_global, -1, -1, false, Tsp::wyzarzanie);
 		break;
 	case 3:
-		dostarcz_zamowienia(macierz_odleglosci_global, false, Tsp::zachlanny);
+		dostarcz_zamowienia(macierz_odleglosci_global, -1, -1, false, Tsp::zachlanny);
 		break;
 	case 4:
 		testy();
@@ -71,7 +71,7 @@ int main()
 	return 0;
 }
 
-double dostarcz_zamowienia(std::vector<std::vector<double>> macierz_odleglosci_global, bool test, Tsp algorytm)
+double dostarcz_zamowienia(std::vector<std::vector<double>> macierz_odleglosci_global, int r1, int r2, bool test, Tsp algorytm)
 {
 	std::vector<std::vector<double>> macierz_odleglosci = macierz_odleglosci_global;
 
@@ -99,10 +99,22 @@ double dostarcz_zamowienia(std::vector<std::vector<double>> macierz_odleglosci_g
 		std::cout << std::endl;
 	}*/
 
-	int restauracja = wyznacz_restauracje(macierz_odleglosci);
-	int restauracja2 = wyznacz_restauracje(macierz_odleglosci);
-	while (restauracja == restauracja2)
-		restauracja2 = wyznacz_restauracje(macierz_odleglosci);
+	int restauracja;
+	int restauracja2;
+
+	if (r1 == -1 && r2 == -1)
+	{
+		restauracja = wyznacz_restauracje(macierz_odleglosci);
+		restauracja2= wyznacz_restauracje(macierz_odleglosci);
+		while (restauracja == restauracja2)
+			restauracja2 = wyznacz_restauracje(macierz_odleglosci);
+	}
+	else
+	{
+		restauracja = r1;
+		restauracja2 = r2;
+	}
+	
 	zamowienia.at(restauracja) = true;
 	zamowienia.at(restauracja2) = true;
 
@@ -276,18 +288,24 @@ void testy()
 		double czas_przeg = 0.0, czas_wyz = 0.0, czas_zach = 0.0;
 		double droga_przeg = 0.0, droga_wyz = 0.0, droga_zach = 0.0;
 		std::vector< std::vector<double>> matrix = generuj_macierz_do_testow(rozmiar.at(i));
+
+		int r1 = wyznacz_restauracje(matrix);
+		int r2 = wyznacz_restauracje(matrix);
+		while (r1 == r2)
+			r2 = wyznacz_restauracje(matrix);
+
 		for (int j = 0; j < (int)powtorzenia; j++)
 		{
 			StartCounter();
-			droga_przeg += dostarcz_zamowienia(matrix, true, Tsp::przeglad);
+			droga_przeg += dostarcz_zamowienia(matrix, r1, r2, true, Tsp::przeglad);
 			czas_przeg += GetCounter();
 
 			StartCounter();
-			droga_wyz += dostarcz_zamowienia(matrix, true, Tsp::wyzarzanie);
+			droga_wyz += dostarcz_zamowienia(matrix, r1, r2, true, Tsp::wyzarzanie);
 			czas_wyz += GetCounter();
 
 			StartCounter();
-			droga_zach += dostarcz_zamowienia(matrix, true, Tsp::zachlanny);
+			droga_zach += dostarcz_zamowienia(matrix, r1, r2, true, Tsp::zachlanny);
 			czas_zach += GetCounter();
 		}
 		plik_przeg << rozmiar.at(i) << " " << czas_przeg / powtorzenia << " " << droga_przeg / powtorzenia << "\n";

@@ -8,7 +8,7 @@
 class c_algorytm_zachlanny
 {
 public:
-	double dlugosc_najlepszej_trasy;
+	double dlugosc_najlepszej_trasy = 0;
 	std::vector<int> najlepsza_trasa;
 
 	c_algorytm_zachlanny(std::vector<std::vector<double>> _macierz_odleglosci, bool _wyswietlanie = false);
@@ -17,4 +17,5 @@ public:
 private:
 	std::vector<std::vector<double>> macierz_odleglosci;
 	bool wyswietlanie;
+	double policz_droge(int, int);
 };
